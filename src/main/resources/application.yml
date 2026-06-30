@@ -27,8 +27,14 @@ spring:
     consumer:
       group-id: relaycore
       auto-offset-reset: earliest
+      # Outbox payloads travel as JSON strings, so both sides use the plain String (de)serializers —
+      # no JsonDeserializer trusted-package config; events are parsed with the shared ObjectMapper.
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 server:
   port: ${PORT:8080}
@@ -52,6 +58,11 @@ relaycore:
     secret: ${JWT_SECRET:relaycore-local-development-signing-secret-change-me-before-prod}
     # ISO-8601 duration; how long an issued access token stays valid.
     expiry: ${JWT_EXPIRY:PT1H}
+  outbox:
+    # Relay cadence + batch sizing. poll-interval-ms is also referenced by OutboxRelay's @Scheduled.
+    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:1000}
+    batch-size: ${OUTBOX_BATCH_SIZE:100}
+    send-timeout-ms: ${OUTBOX_SEND_TIMEOUT_MS:5000}
 
 # Prod profile (Railway + Upstash) overrides the above via env vars (DB_URL, REDIS_HOST,
 # KAFKA_BOOTSTRAP, JWT_SECRET, etc.) and adds SASL_SSL for Upstash Kafka. Add application-prod.yml in the deploy milestone.
