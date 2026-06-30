@@ -20,6 +20,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  cache:
+    type: redis
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:19092}
     consumer:
@@ -44,5 +46,12 @@ management:
     tags:
       application: relaycore
 
+relaycore:
+  jwt:
+    # HS-signed secret. ASCII >= 32 bytes (this default is comfortably longer). Override in prod via JWT_SECRET.
+    secret: ${JWT_SECRET:relaycore-local-development-signing-secret-change-me-before-prod}
+    # ISO-8601 duration; how long an issued access token stays valid.
+    expiry: ${JWT_EXPIRY:PT1H}
+
 # Prod profile (Railway + Upstash) overrides the above via env vars (DB_URL, REDIS_HOST,
-# KAFKA_BOOTSTRAP, etc.) and adds SASL_SSL for Upstash Kafka. Add application-prod.yml in the deploy milestone.
+# KAFKA_BOOTSTRAP, JWT_SECRET, etc.) and adds SASL_SSL for Upstash Kafka. Add application-prod.yml in the deploy milestone.
