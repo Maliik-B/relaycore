@@ -1,0 +1,58 @@
+name: relaycore
+
+# Local dev backing services for relaycore.
+# Bring up with:  docker compose up -d
+# The app (run on the host) connects to these via localhost (see application.yml, profile: local).
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: relaycore-postgres
+    environment:
+      POSTGRES_DB: relaycore
+      POSTGRES_USER: relaycore
+      POSTGRES_PASSWORD: relaycore
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relaycore"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: relaycore-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Kafka-compatible broker. Redpanda = single binary, no Zookeeper — lighter for local dev.
+  # The code uses the plain Kafka protocol, so prod (Upstash Kafka) is a drop-in via env config.
+  redpanda:
+    image: redpandadata/redpanda:latest   # TODO: pin a specific version before relying on this long-term
+    container_name: relaycore-redpanda
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --overprovisioned
+      - --node-id=0
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"   # external listener for host-run app
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
