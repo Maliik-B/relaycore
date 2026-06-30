@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.maliik.relaycore.common.idempotency.IdempotencyService;
 import dev.maliik.relaycore.common.idempotency.IdempotentOutcome;
+import dev.maliik.relaycore.common.outbox.OutboxAppender;
 import dev.maliik.relaycore.inventory.domain.InventoryItem;
 import dev.maliik.relaycore.inventory.domain.Wallet;
 import dev.maliik.relaycore.inventory.repository.CatalogItemRepository;
@@ -45,6 +46,9 @@ class InventoryServiceTest {
     @Mock
     private IdempotencyService idempotencyService;
 
+    @Mock
+    private OutboxAppender outboxAppender;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private InventoryService service;
@@ -53,7 +57,8 @@ class InventoryServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new InventoryService(wallets, inventoryItems, catalogItems, idempotencyService, objectMapper);
+        service = new InventoryService(wallets, inventoryItems, catalogItems, idempotencyService,
+                outboxAppender, objectMapper);
     }
 
     @Test

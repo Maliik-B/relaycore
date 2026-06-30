@@ -16,8 +16,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.maliik.relaycore.common.error.ResourceNotFoundException;
+import dev.maliik.relaycore.common.event.MatchCompleted;
+import dev.maliik.relaycore.common.event.RewardGranted;
+import dev.maliik.relaycore.common.event.RewardGranted.RewardItem;
+import dev.maliik.relaycore.common.event.Topics;
 import dev.maliik.relaycore.common.idempotency.IdempotencyService;
 import dev.maliik.relaycore.common.idempotency.IdempotentOutcome;
+import dev.maliik.relaycore.common.outbox.OutboxAppender;
 import dev.maliik.relaycore.inventory.config.InventoryCacheConfig;
 import dev.maliik.relaycore.inventory.domain.InventoryItem;
 import dev.maliik.relaycore.inventory.domain.Wallet;
@@ -38,18 +43,28 @@ public class InventoryService {
 
     private static final String GRANT_SCOPE = "inventory-grant";
 
+    // Reward policy for a match win. Kept simple and fixed for M3; the granted item must exist in the
+    // seeded catalog (V2). A distinct idempotency scope isolates match rewards from manual/admin grants.
+    private static final String MATCH_REWARD_SCOPE = "match-reward";
+    private static final long MATCH_REWARD_CURRENCY = 100L;
+    private static final String MATCH_REWARD_ITEM = "potion_health";
+    private static final int MATCH_REWARD_ITEM_QUANTITY = 1;
+
     private final WalletRepository wallets;
     private final InventoryItemRepository inventoryItems;
     private final CatalogItemRepository catalogItems;
     private final IdempotencyService idempotencyService;
+    private final OutboxAppender outboxAppender;
     private final ObjectMapper objectMapper;
 
     public InventoryService(WalletRepository wallets, InventoryItemRepository inventoryItems,
-            CatalogItemRepository catalogItems, IdempotencyService idempotencyService, ObjectMapper objectMapper) {
+            CatalogItemRepository catalogItems, IdempotencyService idempotencyService,
+            OutboxAppender outboxAppender, ObjectMapper objectMapper) {
         this.wallets = wallets;
         this.inventoryItems = inventoryItems;
         this.catalogItems = catalogItems;
         this.idempotencyService = idempotencyService;
+        this.outboxAppender = outboxAppender;
         this.objectMapper = objectMapper;
     }
 
@@ -70,6 +85,41 @@ public class InventoryService {
         }
         return idempotencyService.process(GRANT_SCOPE, idempotencyKey, InventoryView.class,
                 requestHash(playerId, command), () -> applyGrant(playerId, command));
+    }
+
+    /**
+     * Applies the reward for a completed match, exactly once per match event. The grant and the
+     * {@code reward-granted} outbox append run inside one idempotent transaction keyed on the match
+     * event id — so a Kafka redelivery of the same {@link MatchCompleted} neither re-grants nor
+     * re-emits. This is the consumer half of the outbox loop: at-least-once delivery, effectively-once
+     * effect.
+     */
+    @CacheEvict(cacheNames = InventoryCacheConfig.INVENTORY_CACHE, key = "#event.winnerId()")
+    public void applyMatchReward(MatchCompleted event) {
+        UUID playerId = event.winnerId();
+        GrantCommand reward = matchReward();
+        String idempotencyKey = "match:" + event.eventId();
+        idempotencyService.process(MATCH_REWARD_SCOPE, idempotencyKey, InventoryView.class,
+                requestHash(playerId, reward), () -> {
+                    InventoryView view = applyGrant(playerId, reward);
+                    appendRewardGranted(event, reward);
+                    return view;
+                });
+    }
+
+    private GrantCommand matchReward() {
+        return new GrantCommand(MATCH_REWARD_CURRENCY,
+                List.of(new GrantItem(MATCH_REWARD_ITEM, MATCH_REWARD_ITEM_QUANTITY)));
+    }
+
+    private void appendRewardGranted(MatchCompleted source, GrantCommand reward) {
+        List<RewardItem> items = reward.items().stream()
+                .map(item -> new RewardItem(item.itemId(), item.quantity()))
+                .toList();
+        RewardGranted granted = new RewardGranted(UUID.randomUUID(), source.matchId(), source.winnerId(),
+                reward.currency(), items);
+        outboxAppender.append("player", source.winnerId().toString(),
+                RewardGranted.class.getSimpleName(), Topics.REWARD_GRANTED, granted);
     }
 
     private InventoryView applyGrant(UUID playerId, GrantCommand command) {
