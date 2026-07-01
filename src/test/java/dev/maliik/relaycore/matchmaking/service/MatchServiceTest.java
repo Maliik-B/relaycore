@@ -2,28 +2,33 @@ package dev.maliik.relaycore.matchmaking.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import dev.maliik.relaycore.common.error.DuplicateResourceException;
+import dev.maliik.relaycore.common.error.InvalidMatchResultException;
+import dev.maliik.relaycore.common.error.MatchAlreadyCompletedException;
 import dev.maliik.relaycore.common.error.ResourceNotFoundException;
 import dev.maliik.relaycore.common.event.MatchCompleted;
 import dev.maliik.relaycore.common.event.Topics;
 import dev.maliik.relaycore.common.outbox.OutboxAppender;
 import dev.maliik.relaycore.matchmaking.domain.Match;
+import dev.maliik.relaycore.matchmaking.domain.MatchParticipant;
+import dev.maliik.relaycore.matchmaking.domain.MatchStatus;
+import dev.maliik.relaycore.matchmaking.repository.MatchParticipantRepository;
 import dev.maliik.relaycore.matchmaking.repository.MatchRepository;
 import dev.maliik.relaycore.matchmaking.web.dto.MatchView;
 
@@ -34,29 +39,35 @@ class MatchServiceTest {
     private MatchRepository matches;
 
     @Mock
+    private MatchParticipantRepository participants;
+
+    @Mock
     private OutboxAppender outboxAppender;
 
     private MatchService service;
 
-    private final UUID matchId = UUID.randomUUID();
     private final UUID winner = UUID.randomUUID();
+    private final UUID opponent = UUID.randomUUID();
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setUp() {
-        service = new MatchService(matches, outboxAppender);
+        service = new MatchService(matches, participants, outboxAppender);
     }
 
     @Test
-    void reportResultPersistsCompletedMatchAndAppendsMatchCompletedEvent() {
-        when(matches.existsById(matchId)).thenReturn(false);
-        when(matches.save(any(Match.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void reportResultCompletesAnActiveMatchAndAppendsMatchCompletedEvent() {
+        Match match = Match.active("na", 1);
+        UUID matchId = match.getId();
+        when(matches.findById(matchId)).thenReturn(Optional.of(match));
+        when(participants.findByMatchId(matchId)).thenReturn(List.of(
+                MatchParticipant.of(matchId, winner), MatchParticipant.of(matchId, opponent)));
 
         MatchView view = service.reportResult(matchId, winner);
 
-        assertThat(view.id()).isEqualTo(matchId);
         assertThat(view.status()).isEqualTo("COMPLETED");
         assertThat(view.winnerId()).isEqualTo(winner);
-        assertThat(view.completedAt()).isNotNull();
+        assertThat(view.participantIds()).containsExactlyInAnyOrder(winner, opponent);
+        assertThat(match.getStatus()).isEqualTo(MatchStatus.COMPLETED);
 
         ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
         verify(outboxAppender).append(eq("match"), eq(matchId.toString()),
@@ -64,25 +75,58 @@ class MatchServiceTest {
         assertThat(payload.getValue()).isInstanceOfSatisfying(MatchCompleted.class, event -> {
             assertThat(event.matchId()).isEqualTo(matchId);
             assertThat(event.winnerId()).isEqualTo(winner);
+            assertThat(event.participantIds()).containsExactlyInAnyOrder(winner, opponent);
             assertThat(event.eventId()).isNotNull();
         });
     }
 
     @Test
-    void reportResultRejectsAnAlreadyRecordedMatch() {
-        when(matches.existsById(matchId)).thenReturn(true);
+    void reportResultRejectsAnUnknownMatch() {
+        UUID missing = UUID.randomUUID();
+        when(matches.findById(missing)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.reportResult(matchId, winner))
-                .isInstanceOf(DuplicateResourceException.class);
-
-        verify(matches, never()).save(any());
+        assertThatThrownBy(() -> service.reportResult(missing, winner))
+                .isInstanceOf(ResourceNotFoundException.class);
         verifyNoInteractions(outboxAppender);
     }
 
     @Test
-    void getReturnsTheMatchWhenPresentAndThrowsWhenMissing() {
-        when(matches.findById(matchId)).thenReturn(Optional.of(Match.completed(matchId, winner, null)));
-        assertThat(service.get(matchId).winnerId()).isEqualTo(winner);
+    void reportResultRejectsAnAlreadyCompletedMatch() {
+        Match match = Match.active("na", 1);
+        match.complete(winner, Instant.now());
+        UUID matchId = match.getId();
+        when(matches.findById(matchId)).thenReturn(Optional.of(match));
+
+        assertThatThrownBy(() -> service.reportResult(matchId, winner))
+                .isInstanceOf(MatchAlreadyCompletedException.class);
+        verifyNoInteractions(outboxAppender);
+    }
+
+    @Test
+    void reportResultRejectsAWinnerWhoDidNotPlay() {
+        Match match = Match.active("na", 1);
+        UUID matchId = match.getId();
+        when(matches.findById(matchId)).thenReturn(Optional.of(match));
+        when(participants.findByMatchId(matchId)).thenReturn(List.of(MatchParticipant.of(matchId, opponent)));
+
+        assertThatThrownBy(() -> service.reportResult(matchId, winner))
+                .isInstanceOf(InvalidMatchResultException.class);
+        verifyNoInteractions(outboxAppender);
+        assertThat(match.getStatus()).isEqualTo(MatchStatus.ACTIVE);
+    }
+
+    @Test
+    void getReturnsTheMatchWithItsParticipants() {
+        Match match = Match.active("eu", 3);
+        UUID matchId = match.getId();
+        when(matches.findById(matchId)).thenReturn(Optional.of(match));
+        when(participants.findByMatchId(matchId)).thenReturn(List.of(MatchParticipant.of(matchId, winner)));
+
+        MatchView view = service.get(matchId);
+
+        assertThat(view.region()).isEqualTo("eu");
+        assertThat(view.skillBucket()).isEqualTo(3);
+        assertThat(view.participantIds()).containsExactly(winner);
 
         UUID missing = UUID.randomUUID();
         when(matches.findById(missing)).thenReturn(Optional.empty());

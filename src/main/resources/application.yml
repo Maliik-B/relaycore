@@ -63,6 +63,9 @@ relaycore:
     poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:1000}
     batch-size: ${OUTBOX_BATCH_SIZE:100}
     send-timeout-ms: ${OUTBOX_SEND_TIMEOUT_MS:5000}
+  matchmaking:
+    # How often MatchmakingWorker scans the queue and forms matches (referenced by its @Scheduled).
+    poll-interval-ms: ${MATCHMAKING_POLL_INTERVAL_MS:1000}
 
 # Prod profile (Railway + Upstash) overrides the above via env vars (DB_URL, REDIS_HOST,
 # KAFKA_BOOTSTRAP, JWT_SECRET, etc.) and adds SASL_SSL for Upstash Kafka. Add application-prod.yml in the deploy milestone.
