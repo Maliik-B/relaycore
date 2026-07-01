@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -34,16 +35,18 @@ import dev.maliik.relaycore.common.outbox.OutboxStatus;
 import dev.maliik.relaycore.inventory.web.dto.InventoryView;
 import dev.maliik.relaycore.inventory.web.dto.ItemView;
 import dev.maliik.relaycore.matchmaking.web.dto.MatchView;
+import dev.maliik.relaycore.matchmaking.web.dto.TicketView;
 import dev.maliik.relaycore.players.web.dto.AuthResponse;
 
 /**
- * End-to-end coverage of the M3 event loop against real Postgres + Redis + Kafka: reporting a match
- * result writes a match + a match-completed outbox row in one transaction; the relay publishes it; the
- * inventory consumer (a real {@code @KafkaListener}) grants the reward and appends a reward-granted
- * outbox row, which the relay publishes in turn. The reward-granted assertion checks the outbox row
- * reaches {@code SENT} — the relay flips that flag only after Kafka acknowledges the publish, so it is
- * proof the event was emitted. Also asserts the loop's headline property: a redelivered match event
- * applies the reward <b>exactly once</b> (event id used as the grant idempotency key). Requires Docker.
+ * End-to-end coverage of the reward arm of the event loop against real Postgres + Redis + Kafka: two
+ * players queue, the {@code MatchmakingWorker} forms the match, reporting its result writes a
+ * match-completed outbox row in one transaction, the relay publishes it, and the inventory consumer (a
+ * real {@code @KafkaListener}) grants the reward and appends a reward-granted outbox row the relay
+ * publishes in turn. The reward-granted assertion checks the outbox row reaches {@code SENT} — the relay
+ * flips that flag only after Kafka acknowledges the publish, so it is proof the event was emitted. Also
+ * asserts the loop's headline property: a redelivered match event applies the reward <b>exactly once</b>
+ * (event id used as the grant idempotency key). Requires Docker.
  *
  * <p>Deliberately shares the {@code @Import(TestcontainersConfiguration.class)} context with the other
  * integration tests (no extra beans) so it reuses one set of containers rather than starting its own.
@@ -69,18 +72,25 @@ class MatchRewardLoopIntegrationTest {
     private OutboxEventRepository outbox;
 
     @Test
-    void reportingAMatchResultGrantsTheRewardAndEmitsRewardGranted() throws Exception {
-        AuthResponse auth = register("matchwinner");
-        UUID winner = auth.player().id();
-        String token = auth.accessToken();
-        UUID matchId = UUID.randomUUID();
+    void queuedMatchCompletesGrantsTheRewardAndEmitsRewardGranted() throws Exception {
+        String region = "loop-" + UUID.randomUUID().toString().substring(0, 8);
+        AuthResponse winnerAuth = register("loopwinner");
+        AuthResponse opponentAuth = register("looploser");
+        UUID winner = winnerAuth.player().id();
+        String token = winnerAuth.accessToken();
+
+        // Both players queue in the same (unique) bucket; the worker pairs exactly them.
+        UUID winnerTicket = queue(token, region, 1).id();
+        queue(opponentAuth.accessToken(), region, 1);
+        UUID matchId = await().atMost(Duration.ofSeconds(30))
+                .until(() -> ticket(winnerTicket, token).matchId(), Objects::nonNull);
 
         ResponseEntity<MatchView> reported = rest.exchange("/matches/" + matchId + "/result", HttpMethod.POST,
                 new HttpEntity<>(Map.of("winnerId", winner.toString()), bearer(token)), MatchView.class);
-
         assertThat(reported.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(reported.getBody().status()).isEqualTo("COMPLETED");
         assertThat(reported.getBody().winnerId()).isEqualTo(winner);
+        assertThat(reported.getBody().participantIds()).contains(winner, opponentAuth.player().id());
 
         // The consumer grants the reward asynchronously once the relay publishes match-completed.
         await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
@@ -111,7 +121,7 @@ class MatchRewardLoopIntegrationTest {
         UUID matchId = UUID.randomUUID();
 
         // Same event id twice = a broker redelivery. Publish straight to the topic, bypassing the producer.
-        MatchCompleted event = new MatchCompleted(UUID.randomUUID(), matchId, winner, Instant.now());
+        MatchCompleted event = new MatchCompleted(UUID.randomUUID(), matchId, winner, List.of(winner), Instant.now());
         String payload = objectMapper.writeValueAsString(event);
         kafkaTemplate.send(Topics.MATCH_COMPLETED, matchId.toString(), payload).get();
         kafkaTemplate.send(Topics.MATCH_COMPLETED, matchId.toString(), payload).get();
@@ -126,11 +136,23 @@ class MatchRewardLoopIntegrationTest {
     // --- helpers ---
 
     private AuthResponse register(String username) {
+        String unique = username + "_" + UUID.randomUUID().toString().substring(0, 8);
         AuthResponse body = rest.postForEntity("/auth/register",
-                Map.of("username", username, "email", username + "@example.com", "password", "password123"),
+                Map.of("username", unique, "email", unique + "@example.com", "password", "password123"),
                 AuthResponse.class).getBody();
         assertThat(body).isNotNull();
         return body;
+    }
+
+    private TicketView queue(String token, String region, int skillBucket) {
+        return rest.exchange("/matchmaking/queue", HttpMethod.POST,
+                new HttpEntity<>(Map.of("region", region, "skillBucket", skillBucket), bearer(token)),
+                TicketView.class).getBody();
+    }
+
+    private TicketView ticket(UUID ticketId, String token) {
+        return rest.exchange("/matchmaking/tickets/" + ticketId, HttpMethod.GET,
+                new HttpEntity<>(bearer(token)), TicketView.class).getBody();
     }
 
     private InventoryView inventory(UUID playerId, String token) {

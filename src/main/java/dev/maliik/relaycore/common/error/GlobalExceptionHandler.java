@@ -35,12 +35,13 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
-    @ExceptionHandler(InsufficientFundsException.class)
-    ProblemDetail handleInsufficientFunds(InsufficientFundsException ex) {
+    @ExceptionHandler({ InsufficientFundsException.class, InvalidMatchResultException.class })
+    ProblemDetail handleUnprocessable(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
     }
 
-    @ExceptionHandler({ ItemNotPurchasableException.class, IdempotencyConflictException.class })
+    @ExceptionHandler({ ItemNotPurchasableException.class, IdempotencyConflictException.class,
+            MatchAlreadyCompletedException.class })
     ProblemDetail handleConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
