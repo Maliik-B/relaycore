@@ -20,21 +20,21 @@ public class TestcontainersConfiguration {
 	@Bean
 	@ServiceConnection
 	KafkaContainer kafkaContainer() {
-		return new KafkaContainer(DockerImageName.parse("apache/kafka-native:latest"))
+		return new KafkaContainer(DockerImageName.parse("apache/kafka-native:4.3.1"))
 				.withStartupTimeout(STARTUP_TIMEOUT);
 	}
 
 	@Bean
 	@ServiceConnection
 	PostgreSQLContainer<?> postgresContainer() {
-		return new PostgreSQLContainer<>(DockerImageName.parse("postgres:latest"))
+		return new PostgreSQLContainer<>(DockerImageName.parse("postgres:16"))
 				.withStartupTimeout(STARTUP_TIMEOUT);
 	}
 
 	@Bean
 	@ServiceConnection(name = "redis")
 	GenericContainer<?> redisContainer() {
-		return new GenericContainer<>(DockerImageName.parse("redis:latest")).withExposedPorts(6379);
+		return new GenericContainer<>(DockerImageName.parse("redis:7")).withExposedPorts(6379);
 	}
 
 }

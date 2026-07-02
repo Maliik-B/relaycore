@@ -36,7 +36,7 @@ services:
   # Kafka-compatible broker. Redpanda = single binary, no Zookeeper — lighter for local dev.
   # The code uses the plain Kafka protocol, so prod (Upstash Kafka) is a drop-in via env config.
   redpanda:
-    image: redpandadata/redpanda:latest   # TODO: pin a specific version before relying on this long-term
+    image: redpandadata/redpanda:v26.1.12
     container_name: relaycore-redpanda
     command:
       - redpanda
