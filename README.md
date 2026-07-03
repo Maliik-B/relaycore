@@ -1,5 +1,7 @@
 # relaycore
 
+[![CI](https://github.com/Maliik-B/relaycore/actions/workflows/ci.yml/badge.svg)](https://github.com/Maliik-B/relaycore/actions/workflows/ci.yml)
+
 A game online-services backend — player accounts, matchmaking, inventory/store, and leaderboards — built as a **modular monolith** with an **event-driven core** on Apache Kafka.
 
 It models the server-side concerns that sit behind a live multiplayer game: identity and auth, a matchmaking queue, an inventory/economy with correctness guarantees, and ranked leaderboards — wired together by Kafka events rather than direct calls.
