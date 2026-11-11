@@ -11,7 +11,7 @@ import dev.maliik.relaycore.common.event.Topics;
  * Declares the event-loop topics so they exist at startup (created by {@code KafkaAdmin}). Declaring
  * them up front means consumers get a partition assignment immediately rather than waiting on broker
  * metadata discovery for a not-yet-existent topic. Single partition / single replica suits the local
- * Redpanda broker; the planned managed prod cluster (Upstash) will be provisioned out of band.
+ * Redpanda broker; the managed Kafka cluster for the planned prod deploy will be provisioned out of band.
  */
 @Configuration
 public class KafkaTopicsConfig {
