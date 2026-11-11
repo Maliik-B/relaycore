@@ -2,15 +2,15 @@
 
 [![CI](https://github.com/Maliik-B/relaycore/actions/workflows/ci.yml/badge.svg)](https://github.com/Maliik-B/relaycore/actions/workflows/ci.yml)
 
-A game online-services backend — player accounts, matchmaking, inventory/store, and leaderboards — built as a **modular monolith** with an **event-driven core** on Apache Kafka.
+A game online-services backend (player accounts, matchmaking, inventory/store, and leaderboards) built as a **modular monolith** with an **event-driven core** on Apache Kafka.
 
-It models the server-side concerns that sit behind a live multiplayer game: identity and auth, a matchmaking queue, an inventory/economy with correctness guarantees, and ranked leaderboards — wired together by Kafka events rather than direct calls.
+It models the server-side concerns that sit behind a live multiplayer game: identity and auth, a matchmaking queue, an inventory/economy with correctness guarantees, and ranked leaderboards, wired together by Kafka events rather than direct calls.
 
 ## Stack
 
 - **Java 21**, **Spring Boot 3.5**
-- **PostgreSQL** (Flyway migrations) · **Redis** (cache + leaderboards) · **Apache Kafka** (event backbone; Redpanda locally, Upstash in prod)
-- REST + OpenAPI/Swagger · JWT auth · Micrometer → Prometheus/Grafana
+- **PostgreSQL** (Flyway migrations) · **Redis** (cache + leaderboards) · **Apache Kafka** (event backbone; Redpanda for local dev, Kafka via Testcontainers in tests)
+- REST + OpenAPI/Swagger · JWT auth · Micrometer metrics (Actuator Prometheus endpoint)
 - JUnit 5 + Testcontainers · GitHub Actions CI · Docker
 
 ## Architecture
@@ -23,10 +23,9 @@ queue for match (matchmaking)
                                                        |
    inventory grants currency + items <-----------------+ -> [reward-granted]
    leaderboard (Redis sorted set) <--------------------+
-   + match-history projection from the event stream
 ```
 
-This keeps Kafka load-bearing (it carries the reward/leaderboard loop) while staying a single deployable — see the design notes for why a modular monolith over microservices.
+This keeps Kafka load-bearing (it carries the reward/leaderboard loop) while staying a single deployable.
 
 ## Run locally
 
@@ -42,7 +41,7 @@ Then open Swagger UI at `http://localhost:8080/swagger-ui.html` and health at `h
 
 ## Status
 
-Early development. See the module map and milestone plan in the design notes.
+Early development.
 
 ## License
 
