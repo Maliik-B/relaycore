@@ -67,5 +67,5 @@ relaycore:
     # How often MatchmakingWorker scans the queue and forms matches (referenced by its @Scheduled).
     poll-interval-ms: ${MATCHMAKING_POLL_INTERVAL_MS:1000}
 
-# Prod profile (Railway + Upstash) overrides the above via env vars (DB_URL, REDIS_HOST,
-# KAFKA_BOOTSTRAP, JWT_SECRET, etc.) and adds SASL_SSL for Upstash Kafka. Add application-prod.yml in the deploy milestone.
+# The planned prod profile (Railway + Upstash) will override the above via env vars (DB_URL, REDIS_HOST,
+# KAFKA_BOOTSTRAP, JWT_SECRET, etc.) and add SASL_SSL for Upstash Kafka, in an application-prod.yml written at the deploy milestone.
