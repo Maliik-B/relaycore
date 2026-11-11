@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
         // Most commonly a concurrent insert losing a unique-constraint race (e.g. two grants/purchases
-        // creating the same inventory row at once) — a conflict the caller can retry.
+        // creating the same inventory row at once), a conflict the caller can retry.
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
                 "the request conflicts with the current state; retry the request");
     }

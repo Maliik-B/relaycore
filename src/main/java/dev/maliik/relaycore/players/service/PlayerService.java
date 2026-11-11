@@ -22,7 +22,7 @@ import dev.maliik.relaycore.players.web.dto.PlayerProfile;
  *
  * <p>Profile reads use cache-aside via Spring's cache abstraction ({@link Cacheable}): a hit skips
  * the database; a miss loads and populates the cache. Writes that change a profile evict the entry
- * ({@link CacheEvict}) so the next read repopulates it — keeping the cache from serving stale data.
+ * ({@link CacheEvict}) so the next read repopulates it, keeping the cache from serving stale data.
  */
 @Service
 public class PlayerService {

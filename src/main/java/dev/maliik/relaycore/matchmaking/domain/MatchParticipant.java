@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 
 /**
  * One player's membership in a match. Modelled as a standalone entity (keyed by id, referencing the match
- * by {@code matchId}) rather than a JPA {@code @OneToMany}/{@code @ElementCollection} — this keeps the
+ * by {@code matchId}) rather than a JPA {@code @OneToMany}/{@code @ElementCollection}; this keeps the
  * mapping validate-friendly and matches how the rest of the codebase references across boundaries by id.
  * {@code playerId} is opaque (no cross-module FK); {@code matchId} is FK'd to {@code matches}.
  */

@@ -15,7 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 @OpenAPIDefinition(info = @Info(
         title = "relaycore API",
         version = "v1",
-        description = "Game online-services backend — players/auth, matchmaking, inventory, leaderboards."))
+        description = "Game online-services backend: players/auth, matchmaking, inventory, leaderboards."))
 @SecurityScheme(
         name = "bearerAuth",
         type = SecuritySchemeType.HTTP,

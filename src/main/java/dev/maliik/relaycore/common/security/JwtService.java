@@ -66,7 +66,7 @@ public class JwtService {
                 .parseSignedClaims(token);
     }
 
-    /** Token lifetime in seconds — surfaced to clients in the auth response. */
+    /** Token lifetime in seconds, surfaced to clients in the auth response. */
     public long expirySeconds() {
         return expirySeconds;
     }

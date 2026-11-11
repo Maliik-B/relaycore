@@ -13,7 +13,7 @@ import dev.maliik.relaycore.inventory.service.InventoryService;
 
 /**
  * Consumes {@link Topics#MATCH_COMPLETED} and grants the match reward. The payload is a JSON string
- * (matching how the outbox publishes), parsed with the shared {@link ObjectMapper} — no
+ * (matching how the outbox publishes), parsed with the shared {@link ObjectMapper}, with no
  * {@code JsonDeserializer} trusted-package setup needed. Idempotency lives in
  * {@link InventoryService#applyMatchReward} (keyed on the event id), so a redelivery is harmless and
  * this listener can stay a thin adapter.

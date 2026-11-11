@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Registration payload. The password length is capped at 72 bytes — BCrypt silently truncates
+ * Registration payload. The password length is capped at 72 bytes: BCrypt silently truncates
  * beyond that, so rejecting it up front avoids a surprising auth footgun.
  */
 public record RegisterRequest(

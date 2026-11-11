@@ -27,7 +27,7 @@ spring:
     consumer:
       group-id: relaycore
       auto-offset-reset: earliest
-      # Outbox payloads travel as JSON strings, so both sides use the plain String (de)serializers —
+      # Outbox payloads travel as JSON strings, so both sides use the plain String (de)serializers:
       # no JsonDeserializer trusted-package config; events are parsed with the shared ObjectMapper.
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer

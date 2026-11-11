@@ -2,7 +2,7 @@ name: CI
 
 # Build + test on every push to master and on every pull request.
 # ubuntu-latest ships Docker, so the Testcontainers integration tests
-# (Postgres + Redis + Kafka) run on the runner as-is — no services: block needed.
+# (Postgres + Redis + Kafka) run on the runner as-is; no services: block needed.
 on:
   push:
     branches: [master]

@@ -43,7 +43,7 @@ import dev.maliik.relaycore.players.web.dto.AuthResponse;
  * players queue, the {@code MatchmakingWorker} forms the match, reporting its result writes a
  * match-completed outbox row in one transaction, the relay publishes it, and the inventory consumer (a
  * real {@code @KafkaListener}) grants the reward and appends a reward-granted outbox row the relay
- * publishes in turn. The reward-granted assertion checks the outbox row reaches {@code SENT} — the relay
+ * publishes in turn. The reward-granted assertion checks the outbox row reaches {@code SENT}: the relay
  * flips that flag only after Kafka acknowledges the publish, so it is proof the event was emitted. Also
  * asserts the loop's headline property: a redelivered match event applies the reward <b>exactly once</b>
  * (event id used as the grant idempotency key). Requires Docker.

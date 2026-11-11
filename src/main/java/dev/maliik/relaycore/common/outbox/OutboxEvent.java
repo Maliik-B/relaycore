@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 /**
  * Transactional-outbox row: a domain event captured in the same database transaction as the state
  * change that produced it. A relay ({@link OutboxRelay}) later publishes {@code PENDING} rows to Kafka
- * and flips them to {@code SENT}. This is how the app avoids the dual-write problem — a domain write
+ * and flips them to {@code SENT}. This is how the app avoids the dual-write problem: a domain write
  * and a Kafka publish can't share one atomic transaction, so the publish is deferred to a row that
  * <i>can</i> be written atomically with the domain change.
  *

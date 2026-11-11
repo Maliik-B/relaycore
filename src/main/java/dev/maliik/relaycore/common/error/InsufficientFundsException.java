@@ -4,7 +4,7 @@ import java.util.UUID;
 
 /**
  * Thrown when a debit would overdraw a wallet. A well-formed request the current balance can't
- * satisfy — mapped to HTTP 422 (not a transient conflict, so retrying as-is won't help).
+ * satisfy, mapped to HTTP 422 (not a transient conflict, so retrying as-is won't help).
  */
 public class InsufficientFundsException extends RuntimeException {
 

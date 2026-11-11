@@ -34,7 +34,7 @@ import dev.maliik.relaycore.players.web.dto.AuthResponse;
 /**
  * End-to-end coverage of inventory/store against real Postgres + Redis: catalog, idempotent grants
  * (including replay and key-reuse conflict), purchases and their failure modes, and the two
- * correctness showcases — optimistic-lock double-spend prevention and idempotent grants under
+ * correctness showcases: optimistic-lock double-spend prevention and idempotent grants under
  * concurrency. Requires Docker.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

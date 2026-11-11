@@ -23,12 +23,12 @@ import dev.maliik.relaycore.matchmaking.repository.TicketRepository;
 /**
  * The background half of matchmaking: on a fixed schedule, drain the open queue and form matches by
  * grouping QUEUED tickets on ({@code region}, {@code skillBucket}). Each full bucket of {@value #MATCH_SIZE}
- * becomes an ACTIVE {@link Match} with its participants, and the consumed tickets are flipped to MATCHED —
+ * becomes an ACTIVE {@link Match} with its participants, and the consumed tickets are flipped to MATCHED,
  * all in one transaction, so a formed match and its tickets commit together or not at all.
  *
  * <p>Single-threaded like the outbox relay (the default scheduler runs one @Scheduled at a time), so a
  * tick never races itself; a partial ticket bucket simply waits for the next tick's arrivals. A bucket
- * matcher, deliberately — this module's depth is being the event source, not matchmaking sophistication.
+ * matcher, deliberately: this module's depth is being the event source, not matchmaking sophistication.
  */
 @Component
 public class MatchmakingWorker {
@@ -38,7 +38,7 @@ public class MatchmakingWorker {
     /** Players per match. Fixed at 2 for M4 (the simplest, most readable bucket). */
     private static final int MATCH_SIZE = 2;
 
-    /** Cap on tickets examined per tick — bounds the unit of work as the queue grows. */
+    /** Cap on tickets examined per tick, bounding the unit of work as the queue grows. */
     private static final int MAX_TICKETS_PER_TICK = 100;
 
     private final TicketRepository tickets;

@@ -11,7 +11,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Positive;
 
 /**
- * A grant of currency and/or items to a player — the shape a match-reward or admin grant takes.
+ * A grant of currency and/or items to a player, the shape a match-reward or admin grant takes.
  * Must be non-empty (enforced by the service); individual amounts are validated here.
  */
 public record GrantRequest(

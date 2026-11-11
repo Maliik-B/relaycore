@@ -39,7 +39,7 @@ import dev.maliik.relaycore.players.web.dto.AuthResponse;
 /**
  * The M4 capstone: the full loop, exercised across <b>both</b> fan-out consumers. Two players queue, the
  * worker forms the match, the result is reported, and the single {@code match-completed} event drives two
- * independent consumer groups — inventory grants the winner's reward and the leaderboard (its own group)
+ * independent consumer groups: inventory grants the winner's reward and the leaderboard (its own group)
  * ranks the winner. Then the same event is redelivered and both effects hold: the reward is granted once
  * and the leaderboard score increments once (ZINCRBY guarded by an event-id set). Requires Docker.
  *
@@ -86,7 +86,7 @@ class MatchmakingLeaderboardIntegrationTest {
         await().atMost(Duration.ofSeconds(30)).untilAsserted(() ->
                 assertThat(inventory(winner, token).balance()).isEqualTo(REWARD_CURRENCY));
 
-        // Leaderboard consumer (group "relaycore-leaderboard") ranks the winner — independent fan-out.
+        // Leaderboard consumer (group "relaycore-leaderboard") ranks the winner (independent fan-out).
         await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
             ResponseEntity<PlayerRankView> rank = rankResponse(winner, token);
             assertThat(rank.getStatusCode()).isEqualTo(HttpStatus.OK);

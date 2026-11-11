@@ -6,7 +6,7 @@ import java.util.UUID;
 import dev.maliik.relaycore.players.domain.Player;
 
 /**
- * Public read model for a player profile — the cached, serialized representation returned by the
+ * Public read model for a player profile: the cached, serialized representation returned by the
  * read endpoints. Excludes credentials.
  */
 public record PlayerProfile(

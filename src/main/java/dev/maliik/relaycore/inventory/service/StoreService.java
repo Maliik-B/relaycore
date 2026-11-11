@@ -19,7 +19,7 @@ import dev.maliik.relaycore.inventory.web.dto.PurchaseResult;
 
 /**
  * Store catalog and purchases. A purchase debits the wallet and credits the item in one transaction;
- * the wallet's optimistic lock ({@code @Version}) means concurrent buys can't double-spend — a losing
+ * the wallet's optimistic lock ({@code @Version}) means concurrent buys can't double-spend: a losing
  * writer fails with an optimistic-lock conflict (surfaced as 409) rather than overdrawing the balance.
  */
 @Service

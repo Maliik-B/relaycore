@@ -18,7 +18,7 @@ import dev.maliik.relaycore.players.web.dto.PlayerProfile;
  * Cache-aside settings for player profile reads: a 10-minute TTL with string keys and JSON-serialized
  * {@link PlayerProfile} values. A typed JSON serializer (over Boot's Jackson mapper, which already
  * handles {@code Instant}) keeps the stored payload clean and reversible without polymorphic type
- * hints. Writes invalidate the entry — see {@code PlayerService}.
+ * hints. Writes invalidate the entry (see {@code PlayerService}).
  */
 @Configuration
 public class PlayerCacheConfig {

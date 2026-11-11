@@ -17,7 +17,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Auth", description = "Registration and login — issues JWT access tokens.")
+@Tag(name = "Auth", description = "Registration and login, issuing JWT access tokens.")
 public class AuthController {
 
     private final PlayerService playerService;

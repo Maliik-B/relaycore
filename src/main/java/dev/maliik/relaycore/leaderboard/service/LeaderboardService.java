@@ -15,12 +15,12 @@ import dev.maliik.relaycore.leaderboard.web.dto.PlayerRankView;
 
 /**
  * Season rankings backed by a Redis sorted set (ZSET), one per season: member = player id, score = wins.
- * The ZSET gives O(log n) top-N ({@code ZREVRANGE}), player rank ({@code ZREVRANK}) and neighbour queries —
- * Redis used beyond caching.
+ * The ZSET gives O(log n) top-N ({@code ZREVRANGE}), player rank ({@code ZREVRANK}) and neighbour queries,
+ * putting Redis to work beyond caching.
  *
  * <p>{@code ZINCRBY} is not idempotent, so {@link #recordWin} first records the source event id in a
  * per-season set ({@code SADD}) and only increments when that add is new. A Kafka redelivery of the same
- * match event therefore ranks the winner exactly once — the same effectively-once theme as the inventory
+ * match event therefore ranks the winner exactly once, the same effectively-once theme as the inventory
  * grant, applied to a non-idempotent operation.
  */
 @Service

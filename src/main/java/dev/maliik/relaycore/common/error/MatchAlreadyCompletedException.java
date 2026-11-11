@@ -4,7 +4,7 @@ import java.util.UUID;
 
 /**
  * Thrown when a result is reported for a match that is no longer ACTIVE (already completed). A conflict
- * with the current state — mapped to HTTP 409.
+ * with the current state, mapped to HTTP 409.
  */
 public class MatchAlreadyCompletedException extends RuntimeException {
 

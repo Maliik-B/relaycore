@@ -13,7 +13,7 @@ import dev.maliik.relaycore.leaderboard.service.LeaderboardService;
 
 /**
  * Consumes {@link Topics#MATCH_COMPLETED} on its <b>own consumer group</b> ({@code relaycore-leaderboard})
- * so it fans out from the same topic independently of the inventory consumer — the pub/sub decoupling
+ * so it fans out from the same topic independently of the inventory consumer, the pub/sub decoupling
  * microservices rely on, done inside the monolith. Each match win increments the winner's season score;
  * idempotency (against Kafka redelivery) lives in {@link LeaderboardService#recordWin}, keyed on the event id.
  */

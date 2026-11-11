@@ -16,11 +16,11 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> 
     /** Oldest-first batch of unpublished events for the relay to drain (backed by a partial index). */
     List<OutboxEvent> findByStatusOrderByCreatedAtAsc(OutboxStatus status, Pageable pageable);
 
-    /** Events emitted for one aggregate of a given type — used by tests to assert the loop's output. */
+    /** Events emitted for one aggregate of a given type, used by tests to assert the loop's output. */
     List<OutboxEvent> findByAggregateIdAndType(String aggregateId, String type);
 
     /**
-     * Flips a published event to SENT in its own short transaction — called only after Kafka has
+     * Flips a published event to SENT in its own short transaction, called only after Kafka has
      * acknowledged the publish, so a crash before this runs simply leaves the row PENDING for retry.
      */
     @Transactional

@@ -4,7 +4,7 @@ import java.util.UUID;
 
 /**
  * Thrown when a reported winner is not one of the match's participants. A well-formed request the match
- * state can't accept — mapped to HTTP 422 (retrying as-is won't help).
+ * state can't accept, mapped to HTTP 422 (retrying as-is won't help).
  */
 public class InvalidMatchResultException extends RuntimeException {
 

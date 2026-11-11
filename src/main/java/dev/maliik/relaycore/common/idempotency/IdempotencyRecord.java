@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 
 /**
  * A processed mutating request, keyed by ({@code scope}, {@code idempotencyKey}). The stored response
- * body is replayed on retries so the side effect happens exactly once. Write-once — no updated_at.
+ * body is replayed on retries so the side effect happens exactly once. Write-once: no updated_at.
  */
 @Entity
 @Table(name = "idempotency_keys")

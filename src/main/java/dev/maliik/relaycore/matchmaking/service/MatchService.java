@@ -21,9 +21,9 @@ import dev.maliik.relaycore.matchmaking.repository.MatchRepository;
 import dev.maliik.relaycore.matchmaking.web.dto.MatchView;
 
 /**
- * The completion path of a match — the event <i>source</i> of the reward loop. Reporting a result
+ * The completion path of a match, the event <i>source</i> of the reward loop. Reporting a result
  * transitions an ACTIVE match (formed by the worker) to COMPLETED and writes a {@code match-completed}
- * outbox event in the <b>same transaction</b> as the state change — the dual-write the outbox exists to
+ * outbox event in the <b>same transaction</b> as the state change, the dual-write the outbox exists to
  * make atomic. The relay publishes the event; inventory grants the reward and leaderboards rank the winner.
  */
 @Service

@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/matches")
-@Tag(name = "Matches", description = "Match results — the event source for the reward loop.")
+@Tag(name = "Matches", description = "Match results: the event source for the reward loop.")
 @SecurityRequirement(name = "bearerAuth")
 public class MatchController {
 

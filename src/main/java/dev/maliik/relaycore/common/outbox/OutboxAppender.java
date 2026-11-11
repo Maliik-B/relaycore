@@ -7,11 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Domain-facing entry point for emitting an event: serialize the payload to JSON and persist a PENDING
- * {@link OutboxEvent}. Call this <b>inside the domain transaction</b> — the row commits atomically with
+ * {@link OutboxEvent}. Call this <b>inside the domain transaction</b>, so the row commits atomically with
  * the state change, and the relay handles the actual Kafka publish afterwards.
  *
  * <p>Payloads are stored as a JSON string (and published as a string value) so the consumer side needs
- * no {@code JsonDeserializer} trusted-package configuration — it parses with the same {@link ObjectMapper}.
+ * no {@code JsonDeserializer} trusted-package configuration; it parses with the same {@link ObjectMapper}.
  */
 @Component
 public class OutboxAppender {

@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Resolves a {@code Bearer} token on each request into an authenticated principal. A missing or
- * invalid token simply leaves the security context unauthenticated — the filter chain then decides
+ * invalid token simply leaves the security context unauthenticated; the filter chain then decides
  * whether the target endpoint requires authentication, so this filter never short-circuits with an
  * error itself.
  */

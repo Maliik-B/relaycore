@@ -17,7 +17,7 @@ import dev.maliik.relaycore.common.error.IdempotencyConflictException;
  * Generic replay-safe execution of a mutating action, keyed by ({@code scope}, {@code key}).
  *
  * <p>The action and the persistence of the idempotency record run in <b>one transaction</b>, so a
- * failure rolls back both — a failed request leaves no record and can be safely retried. Concurrent
+ * failure rolls back both: a failed request leaves no record and can be safely retried. Concurrent
  * requests with the same key race to insert the record; the unique constraint lets exactly one win,
  * and the loser's transaction rolls back (undoing its side effect) and replays the winner's result.
  * A replay carrying a different request fingerprint is rejected as a key-reuse conflict.

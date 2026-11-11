@@ -14,7 +14,7 @@ import dev.maliik.relaycore.matchmaking.web.dto.TicketView;
 
 /**
  * The player-facing half of matchmaking: enqueue a ticket and look one up. Match formation is the
- * {@code MatchmakingWorker}'s job. Kept intentionally shallow — this module exists to be the event
+ * {@code MatchmakingWorker}'s job. Kept intentionally shallow: this module exists to be the event
  * source, so depth lives in the outbox and the inventory/leaderboard consumers.
  */
 @Service
@@ -27,7 +27,7 @@ public class MatchmakingService {
     }
 
     /**
-     * Enqueues the player for matchmaking. A player may hold only one open ticket at a time — the
+     * Enqueues the player for matchmaking. A player may hold only one open ticket at a time: the
      * friendly check here returns 409, and a partial unique index backstops it under a concurrent race.
      */
     @Transactional

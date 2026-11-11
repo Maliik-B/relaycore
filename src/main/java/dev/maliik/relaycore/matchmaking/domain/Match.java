@@ -22,7 +22,7 @@ import jakarta.persistence.Version;
  * of the reward loop. A match is created {@code ACTIVE} (winner unknown); reporting a result transitions
  * it to {@code COMPLETED} and records the winner. The {@code @Version} column makes that transition
  * optimistically locked, so a concurrent double-report loses on commit rather than emitting the reward
- * event twice. {@code winnerId} is an opaque reference into the players module — no cross-module FK.
+ * event twice. {@code winnerId} is an opaque reference into the players module, with no cross-module FK.
  */
 @Entity
 @Table(name = "matches")

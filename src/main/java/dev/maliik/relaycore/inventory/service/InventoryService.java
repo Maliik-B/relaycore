@@ -90,7 +90,7 @@ public class InventoryService {
     /**
      * Applies the reward for a completed match, exactly once per match event. The grant and the
      * {@code reward-granted} outbox append run inside one idempotent transaction keyed on the match
-     * event id — so a Kafka redelivery of the same {@link MatchCompleted} neither re-grants nor
+     * event id, so a Kafka redelivery of the same {@link MatchCompleted} neither re-grants nor
      * re-emits. This is the consumer half of the outbox loop: at-least-once delivery, effectively-once
      * effect.
      */
